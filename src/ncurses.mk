@@ -36,7 +36,8 @@ define $(PKG)_BUILD
         --without-manpages \
         --enable-pc-files \
         --with-normal \
-        --without-shared
+        --without-shared \
+        CFLAGS='-DWINVER=0x0501 -D_WIN32_WINNT=0x0501'
     $(MAKE) -C '$(1)' -j '$(JOBS)'
     $(MAKE) -C '$(1)' -j 1 install TIC_PATH='$(1).native/progs/tic'
 endef
