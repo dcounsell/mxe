@@ -17,12 +17,12 @@ define $(PKG)_UPDATE
     tail -1
 endef
 
-define $(PKG)_BUILD_$(BUILD)
+define $(PKG)_BUILD_$(BUILD).reqs
     # gets has been removed from recent glibc
     $(SED) -i -e '/gets is a/d' '$(1)/lib/stdio.in.h'
     mkdir '$(1).build'
     cd    '$(1).build' && '$(1)/configure' \
-        --prefix='$(PREFIX)/$(TARGET)'
+        --prefix='$(PREFIX)/$(BUILD)'
     $(MAKE) -C '$(1).build' -j '$(JOBS)'
     $(MAKE) -C '$(1).build' -j 1 install
 endef

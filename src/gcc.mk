@@ -9,11 +9,13 @@ $(PKG)_SUBDIR   := gcc-$($(PKG)_VERSION)
 $(PKG)_FILE     := gcc-$($(PKG)_VERSION).tar.bz2
 $(PKG)_URL      := ftp://ftp.gnu.org/pub/gnu/gcc/gcc-$($(PKG)_VERSION)/$($(PKG)_FILE)
 $(PKG)_URL_2    := ftp://ftp.mirrorservice.org/sites/sourceware.org/pub/gcc/releases/gcc-$($(PKG)_VERSION)/$($(PKG)_FILE)
-$(PKG)_DEPS     := binutils gcc-cloog gcc-gmp gcc-isl gcc-mpc gcc-mpfr
+$(PKG)_DEPS     := binutils
 
 $(PKG)_DEPS_i686-pc-mingw32    := $($(PKG)_DEPS) mingwrt w32api
 $(PKG)_DEPS_i686-w64-mingw32   := $($(PKG)_DEPS) mingw-w64
 $(PKG)_DEPS_x86_64-w64-mingw32 := $($(PKG)_DEPS) mingw-w64
+$(PKG)_DEPS_$(BUILD)           := cloog gmp isl mpc mpfr
+$(PKG)_FILE_$(BUILD)           :=
 
 define $(PKG)_UPDATE
     $(WGET) -q -O- 'http://ftp.gnu.org/gnu/gcc/?C=M;O=D' | \
@@ -43,11 +45,11 @@ define $(PKG)_CONFIGURE
         --enable-threads=win32 \
         --disable-libgomp \
         --disable-libmudflap \
-        --with-cloog='$(PREFIX)' \
-        --with-gmp='$(PREFIX)' \
-        --with-isl='$(PREFIX)' \
-        --with-mpc='$(PREFIX)' \
-        --with-mpfr='$(PREFIX)' \
+        --with-cloog='$(PREFIX)/$(BUILD)' \
+        --with-gmp='$(PREFIX)/$(BUILD)' \
+        --with-isl='$(PREFIX)/$(BUILD)' \
+        --with-mpc='$(PREFIX)/$(BUILD)' \
+        --with-mpfr='$(PREFIX)/$(BUILD)' \
         --with-as='$(PREFIX)/bin/$(TARGET)-as' \
         --with-ld='$(PREFIX)/bin/$(TARGET)-ld' \
         --with-nm='$(PREFIX)/bin/$(TARGET)-nm' \
@@ -92,6 +94,7 @@ $(PKG)_BUILD_x86_64-w64-mingw32 = $(subst mxe-config-opts,--disable-lib32,$($(PK
 $(PKG)_BUILD_i686-w64-mingw32   = $(subst mxe-config-opts,--disable-lib64,$($(PKG)_BUILD_mingw-w64))
 
 define $(PKG)_BUILD_$(BUILD)
+    $(INSTALL) -d '$(PREFIX)/bin'
     for f in c++ cpp g++ gcc gcov; do \
         ln -sf "`which $$f`" '$(PREFIX)/bin/$(TARGET)'-$$f ; \
     done

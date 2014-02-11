@@ -10,6 +10,7 @@ $(PKG)_FILE     := $(PKG)-$($(PKG)_VERSION).tar.xz
 $(PKG)_URL      := ftp://ftp.gnu.org/pub/gnu/$(PKG)/$($(PKG)_FILE)
 $(PKG)_URL_2    := http://www.mpfr.org/mpfr-$($(PKG)_VERSION)/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc gmp
+$(PKG)_DEPS_$(BUILD) := gmp
 
 define $(PKG)_UPDATE
     $(WGET) -q -O- 'http://www.mpfr.org/mpfr-current/#download' | \
@@ -25,7 +26,7 @@ define $(PKG)_BUILD
         --with-gmp-include='$(PREFIX)/$(TARGET)/include/'
         --with-gmp-lib='$(PREFIX)/$(TARGET)/lib/'
     $(MAKE) -C '$(1)' -j '$(JOBS)'
-    $(MAKE) -C '$(1)' -j '$(JOBS)' install
+    $(MAKE) -C '$(1)' -j 1 install
 
     # build runtime tests to verify toolchain components
     -$(MAKE) -C '$(1)' -j '$(JOBS)' check -k
@@ -36,4 +37,14 @@ define $(PKG)_BUILD
      printf 'set PATH=..\\;%%PATH%%\r\n'; \
      printf 'for /R %%%%f in (*.exe) do %%%%f || echo %%%%f fail >> all-tests-$(PKG)-$($(PKG)_VERSION).txt\r\n';) \
      > '$(PREFIX)/$(TARGET)/bin/$(PKG)-tests/all-tests-$(PKG)-$($(PKG)_VERSION).bat'
+endef
+
+define $(PKG)_BUILD_$(BUILD)
+    mkdir '$(1).build'
+    cd    '$(1).build' && '$(1)/configure' \
+        --prefix='$(PREFIX)/$(TARGET)' \
+        --disable-shared \
+        --with-gmp='$(PREFIX)/$(TARGET)'
+    $(MAKE) -C '$(1).build' -j '$(JOBS)'
+    $(MAKE) -C '$(1).build' -j 1 install
 endef

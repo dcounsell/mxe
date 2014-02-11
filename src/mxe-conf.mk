@@ -1,36 +1,21 @@
 # This file is part of MXE.
 # See index.html for further information.
 
-PKG             := pkgconf
+PKG             := mxe-conf
 $(PKG)_IGNORE   :=
-$(PKG)_VERSION  := da179fd
-$(PKG)_CHECKSUM := 1e7b5ffe35ca4580a9b801307c3bc919fd77a4fd
-$(PKG)_SUBDIR   := $(PKG)-$(PKG)-$($(PKG)_VERSION)
-$(PKG)_FILE     := $(PKG)-$($(PKG)_VERSION).tar.gz
-$(PKG)_URL      := http://github.com/$(PKG)/$(PKG)/tarball/$($(PKG)_VERSION)/$($(PKG)_FILE)
+$(PKG)_VERSION  := 1
+$(PKG)_CHECKSUM :=
+$(PKG)_SUBDIR   :=
+$(PKG)_FILE     :=
+$(PKG)_URL      :=
 $(PKG)_DEPS     :=
 
-$(PKG)_DEPS_$(BUILD) := automake
-
-define $(PKG)_UPDATE_
-    $(WGET) -q -O- 'https://github.com/pkgconf/pkgconf/commits/master' | \
-    $(SED) -n 's#.*<span class="sha">\([^<]\{7\}\)[^<]\{3\}<.*#\1#p' | \
-    head -1
-endef
-
 define $(PKG)_UPDATE
-    echo 'Warning: Updates are temporarily disabled for package pkgconf.' >&2;
-    echo $(pkgconf_VERSION)
+    echo $(mxe-conf_VERSION)
 endef
 
-define $(PKG)_BUILD_COMMON
-    cd '$(1)' && ./autogen.sh
-    cd '$(1)' && ./configure \
-        --prefix='$(PREFIX)'
-    $(MAKE) -C '$(1)' -j '$(JOBS)'
-    $(MAKE) -C '$(1)' -j 1 install
-    mv '$(PREFIX)/bin/pkgconf' '$(PREFIX)/bin/$(TARGET)-pkgconf'
-
+define $(PKG)_BUILD
+    echo $(MXE_TARGETS)
     # install target-specific autotools config file
     $(INSTALL) -d '$(PREFIX)/$(TARGET)/share'
     echo "ac_cv_build=$(BUILD)" > '$(PREFIX)/$(TARGET)/share/config.site'
@@ -41,7 +26,7 @@ define $(PKG)_BUILD_COMMON
 
     # create pkg-config script
     (echo '#!/bin/sh'; \
-     echo 'PKG_CONFIG_PATH="$(PREFIX)/$(TARGET)/qt5/lib/pkgconfig":"$$PKG_CONFIG_PATH_$(subst .,_,$(subst -,_,$(TARGET)))" PKG_CONFIG_LIBDIR='\''$(PREFIX)/$(TARGET)/lib/pkgconfig'\'' exec '$(PREFIX)/bin/$(TARGET)-pkgconf' $(if $(BUILD_STATIC),--static) "$$@"') \
+     echo 'PKG_CONFIG_PATH="$(PREFIX)/$(TARGET)/qt5/lib/pkgconfig":"$$PKG_CONFIG_PATH_$(subst .,_,$(subst -,_,$(TARGET)))" PKG_CONFIG_LIBDIR='\''$(PREFIX)/$(TARGET)/lib/pkgconfig'\'' exec '$(PREFIX)/$(BUILD)/bin/pkgconf' $(if $(BUILD_STATIC),--static) "$$@"') \
              > '$(PREFIX)/bin/$(TARGET)-pkg-config'
     chmod 0755 '$(PREFIX)/bin/$(TARGET)-pkg-config'
 
@@ -67,10 +52,6 @@ define $(PKG)_BUILD_COMMON
      echo 'set(CMAKE_INSTALL_PREFIX $(PREFIX)/$(TARGET) CACHE PATH "Installation Prefix")'; \
      echo 'set(CMAKE_BUILD_TYPE Release CACHE STRING "Debug|Release|RelWithDebInfo|MinSizeRel")') \
      > '$(CMAKE_TOOLCHAIN_FILE)'
-endef
-
-define $(PKG)_BUILD
-    $($(PKG)_BUILD_COMMON)
 
     # create pkg-config files for OpenGL/GLU
     $(INSTALL) -d '$(PREFIX)/$(TARGET)/lib/pkgconfig'
@@ -87,4 +68,4 @@ define $(PKG)_BUILD
      > '$(PREFIX)/$(TARGET)/lib/pkgconfig/glu.pc'
 endef
 
-$(PKG)_BUILD_$(BUILD) = $($(PKG)_BUILD_COMMON)
+$(PKG)_BUILD_$(BUILD) =

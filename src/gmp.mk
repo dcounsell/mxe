@@ -10,6 +10,7 @@ $(PKG)_FILE     := $(PKG)-$($(PKG)_VERSION).tar.bz2
 $(PKG)_URL      := ftp://ftp.gmplib.org/pub/$(PKG)-$($(PKG)_VERSION)/$($(PKG)_FILE)
 $(PKG)_URL_2    := ftp://ftp.cs.tu-berlin.de/pub/gnu/$(PKG)/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc
+$(PKG)_DEPS_$(BUILD) :=
 
 define $(PKG)_UPDATE
     $(WGET) -q -O- 'http://www.gmplib.org/' | \
@@ -36,4 +37,13 @@ define $(PKG)_BUILD
      printf 'set PATH=..\\;%%PATH%%\r\n'; \
      printf 'for /R %%%%f in (*.exe) do %%%%f || echo %%%%f fail >> all-tests-$(PKG)-$($(PKG)_VERSION).txt\r\n';) \
      > '$(PREFIX)/$(TARGET)/bin/$(PKG)-tests/all-tests-$(PKG)-$($(PKG)_VERSION).bat'
+endef
+
+define $(PKG)_BUILD_$(BUILD)
+    mkdir '$(1).build'
+    cd    '$(1).build' && '$(1)/configure' \
+        --prefix='$(PREFIX)/$(TARGET)' \
+        --disable-shared
+    $(MAKE) -C '$(1).build' -j '$(JOBS)'
+    $(MAKE) -C '$(1).build' -j 1 install
 endef

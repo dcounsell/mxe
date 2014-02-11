@@ -48,7 +48,7 @@ PKG_DIR    := $(PWD)/pkg
 TMP_DIR     = $(PWD)/tmp-$(1)
 PKGS       := $(shell $(SED) -n 's/^.* class="package">\([^<]*\)<.*$$/\1/p' '$(TOP_DIR)/index.html')
 BUILD      := $(shell '$(EXT_DIR)/config.guess')
-BUILD_PKGS := $(shell grep -l 'BUILD_$$(BUILD)' '$(TOP_DIR)/src/'*.mk | $(SED) -n 's,.*src/\(.*\)\.mk,\1,p')
+BUILD_PKGS := $(shell grep -l 'BUILD_$$(BUILD)\.reqs' '$(TOP_DIR)/src/'*.mk | $(SED) -n 's,.*src/\(.*\)\.mk,\1,p')
 PATH       := $(PREFIX)/$(BUILD)/bin:$(PREFIX)/bin:$(PATH)
 
 MXE_CONFIGURE_OPTS = \
@@ -176,7 +176,9 @@ download: $(addprefix download-,$(PKGS))
 
 .PHONY: build-requirements
 build-requirements:
-	@$(MAKE) -f '$(MAKEFILE)' $(BUILD_PKGS) MXE_TARGETS=$(BUILD) DONT_CHECK_REQUIREMENTS=true
+	@$(MAKE) -f '$(MAKEFILE)' $(BUILD_PKGS) MXE_TARGETS=$(BUILD).reqs DONT_CHECK_REQUIREMENTS=true
+
+MXE_TARGETS += $(BUILD)
 
 define TARGET_DEPS
 $(1)_DEPS := $(shell echo '$(MXE_TARGETS)' | \
@@ -243,17 +245,19 @@ LOOKUP_PKG_RULE = $(strip \
 define PKG_RULE
 .PHONY: download-$(1)
 download-$(1):: $(addprefix download-,$(value $(call LOOKUP_PKG_RULE,$(1),DEPS,$(3))))
-	if ! $(call CHECK_PKG_ARCHIVE,$(1)); then \
-	    $(call DOWNLOAD_PKG_ARCHIVE,$(1)); \
-	    $(call CHECK_PKG_ARCHIVE,$(1)) || { echo 'Wrong checksum!'; exit 1; }; \
-	fi
+	$(if $(value $(call LOOKUP_PKG_RULE,$(1),FILE,$(3))),
+	    if ! $(call CHECK_PKG_ARCHIVE,$(1)); then \
+	        $(call DOWNLOAD_PKG_ARCHIVE,$(1)); \
+	        $(call CHECK_PKG_ARCHIVE,$(1)) || { echo 'Wrong checksum!'; exit 1; }; \
+	    fi
+	    ,)
 
 .PHONY: $(1)
 $(1): $(PREFIX)/$(3)/installed/$(1)
 $(PREFIX)/$(3)/installed/$(1): $(TOP_DIR)/src/$(1).mk \
                           $(wildcard $(TOP_DIR)/src/$(1)-*.patch) \
                           $(wildcard $(TOP_DIR)/src/$(1)-test*) \
-                          $(addprefix $(PREFIX)/$(3)/installed/,$(value $(call LOOKUP_PKG_RULE,$(1),DEPS,$(3)))) \
+                          $(addprefix $(PREFIX)/$(3)/installed/,$(filter-out $(1),mxe-conf) $(value $(call LOOKUP_PKG_RULE,$(1),DEPS,$(3)))) \
                           | $(if $(DONT_CHECK_REQUIREMENTS),,check-requirements) $(3)
 	@[ -d '$(LOG_DIR)/$(TIMESTAMP)' ] || mkdir -p '$(LOG_DIR)/$(TIMESTAMP)'
 	@if ! $(call CHECK_PKG_ARCHIVE,$(1)); then \
@@ -273,7 +277,8 @@ $(PREFIX)/$(3)/installed/$(1): $(TOP_DIR)/src/$(1).mk \
 	fi
 	$(if $(value $(call LOOKUP_PKG_RULE,$(1),BUILD,$(3))),
 	    @echo '[build]    $(1)',
-	    @echo '[no-build] $(1)')
+	    $(if $(filter-out $(3),$(BUILD)),
+	        @echo '[no-build] $(1)'))
 	@touch '$(LOG_DIR)/$(TIMESTAMP)/$(1)_$(3)'
 	@[ $(words $(MXE_TARGETS)) == 1 ] || ln -sf '$(TIMESTAMP)/$(1)_$(3)' '$(LOG_DIR)/$(1)_$(3)'
 	@ln -sf '$(TIMESTAMP)/$(1)_$(3)' '$(LOG_DIR)/$(1)'
@@ -309,10 +314,12 @@ build-only-$(1)_$(3):
 	    lsb_release -a 2>/dev/null || sw_vers 2>/dev/null || true
 	    rm -rf   '$(2)'
 	    mkdir -p '$(2)'
-	    cd '$(2)' && $(call UNPACK_PKG_ARCHIVE,$(1))
-	    cd '$(2)/$($(1)_SUBDIR)'
-	    $(foreach PKG_PATCH,$(sort $(wildcard $(TOP_DIR)/src/$(1)-*.patch)),
-	        (cd '$(2)/$($(1)_SUBDIR)' && $(PATCH) -p1 -u) < $(PKG_PATCH))
+	    $(if $(value $(call LOOKUP_PKG_RULE,$(1),FILE,$(3))),
+	        cd '$(2)' && $(call UNPACK_PKG_ARCHIVE,$(1))
+	        cd '$(2)/$($(1)_SUBDIR)' \
+	        $(foreach PKG_PATCH,$(sort $(wildcard $(TOP_DIR)/src/$(1)-*.patch)),
+	            (cd '$(2)/$($(1)_SUBDIR)' && $(PATCH) -p1 -u) < $(PKG_PATCH))
+	        ,)
 	    $$(call $(call LOOKUP_PKG_RULE,$(1),BUILD,$(3)),$(2)/$($(1)_SUBDIR),$(TOP_DIR)/src/$(1)-test)
 	    (du -k -d 0 '$(2)' 2>/dev/null || du -k --max-depth 0 '$(2)') | $(SED) -n 's/^\(\S*\).*/du: \1 KiB/p'
 	    rm -rfv  '$(2)'
@@ -360,6 +367,13 @@ RECURSIVELY_EXCLUDED_PKGS = \
 
 .PHONY: all-filtered
 all-filtered: $(filter-out $(call RECURSIVELY_EXCLUDED_PKGS),$(PKGS))
+
+# most packages aren't relevant on $(BUILD)
+# so create empty build rules for non-toolchain pkgs
+TOOLCHAIN_PKGS = gcc yasm
+$(foreach PKG,$(filter-out $(sort $(call SET_CLEAR,PKGS_VISITED)\
+    $(call WALK_UPSTREAM,$(TOOLCHAIN_PKGS))),$(PKGS)),\
+    $(eval $(PKG)_BUILD_$(BUILD)=))
 
 # print a list of upstream dependencies and downstream dependents
 show-deps-%:

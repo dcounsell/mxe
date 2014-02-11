@@ -17,10 +17,10 @@ define $(PKG)_UPDATE
     tail -1
 endef
 
-define $(PKG)_BUILD_$(BUILD)
+define $(PKG)_BUILD_$(BUILD).reqs
     mkdir '$(1).build'
     cd    '$(1).build' && '$(1)/configure' \
-        --prefix='$(PREFIX)/$(TARGET)'
+        --prefix='$(PREFIX)/$(BUILD)'
     $(MAKE) -C '$(1).build' -j '$(JOBS)' man1_MANS=
     $(MAKE) -C '$(1).build' -j 1 install man1_MANS=
 endef

@@ -9,7 +9,7 @@ $(PKG)_SUBDIR   := binutils-$($(PKG)_VERSION)
 $(PKG)_FILE     := binutils-$($(PKG)_VERSION).tar.bz2
 $(PKG)_URL      := ftp://ftp.gnu.org/pub/gnu/binutils/$($(PKG)_FILE)
 $(PKG)_URL_2    := ftp://ftp.cs.tu-berlin.de/pub/gnu/binutils/$($(PKG)_FILE)
-$(PKG)_DEPS     := pkgconf
+$(PKG)_DEPS     :=
 
 define $(PKG)_UPDATE
     $(WGET) -q -O- 'http://ftp.gnu.org/gnu/binutils/?C=M;O=D' | \
@@ -20,9 +20,12 @@ endef
 
 define $(PKG)_BUILD
     cd '$(1)' && ./configure \
+        $(if $(MXE_BUILD_HOST_TOOLCHAIN),\
+        --host='$(call merge,.,$(call chop,$(call split,.,$(TARGET))))' \
+        --prefix='$(PREFIX)/$(call merge,.,$(call chop,$(call split,.,$(TARGET))))', \
         --target='$(TARGET)' \
+        --prefix='$(PREFIX)' )\
         --build='$(BUILD)' \
-        --prefix='$(PREFIX)' \
         --disable-multilib \
         --with-gcc \
         --with-gnu-ld \
@@ -34,6 +37,23 @@ define $(PKG)_BUILD
     $(MAKE) -C '$(1)' -j 1 install
 
     rm -f $(addprefix $(PREFIX)/$(TARGET)/bin/, ar as dlltool ld ld.bfd nm objcopy objdump ranlib strip)
+endef
+
+define $(PKG)_HOST_BUILD
+    # cross-compile toolchain for host
+    cd '$(1)' && ./configure \
+        --host='$(TARGET)' \
+        --build='$(BUILD)' \
+        --prefix='$(PREFIX)/$(TARGET)' \
+        --disable-multilib \
+        --with-gcc \
+        --with-gnu-ld \
+        --with-gnu-as \
+        --disable-nls \
+        --disable-shared \
+        --disable-werror
+    $(MAKE) -C '$(1)' -j '$(JOBS)'
+    $(MAKE) -C '$(1)' -j 1 install
 endef
 
 $(PKG)_BUILD_$(BUILD) :=
