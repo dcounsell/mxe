@@ -16,15 +16,3 @@ diff -ur tmp.old/include/commctrl.h tmp/include/commctrl.h
  #define NMTVDISPINFO __AW(NMTVDISPINFO)
  #define LPNMTVDISPINFO __AW(LPNMTVDISPINFO)
  #define TVN_SELCHANGING __AW(TVN_SELCHANGING)
-diff -ur tmp.old/mingw32/include/commctrl.h tmp/mingw32/include/commctrl.h
---- tmp.old/mingw32/include/commctrl.h	2014-03-01 16:52:38.000000000 +1100
-+++ tmp/mingw32/include/commctrl.h	2014-03-01 16:57:20.000000000 +1100
-@@ -2214,7 +2214,7 @@
- #define TVM_SETITEM __AW(TVM_SETITEM)
- #define TVM_EDITLABEL __AW(TVM_EDITLABEL)
- #define TVM_GETISEARCHSTRING __AW(TVM_GETISEARCHSTRING)
--#define TV_DISPINFO __AW(NMTVDISPINFO)
-+#define TV_DISPINFO __AW(TV_DISPINFO)
- #define NMTVDISPINFO __AW(NMTVDISPINFO)
- #define LPNMTVDISPINFO __AW(LPNMTVDISPINFO)
- #define TVN_SELCHANGING __AW(TVN_SELCHANGING)
