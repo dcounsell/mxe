@@ -14,6 +14,7 @@ $(PKG)_DEPS     := binutils gcc-cloog gcc-gmp gcc-isl gcc-mpc gcc-mpfr
 $(PKG)_DEPS_i686-pc-mingw32    := $($(PKG)_DEPS) mingwrt w32api
 $(PKG)_DEPS_i686-w64-mingw32   := $($(PKG)_DEPS) mingw-w64
 $(PKG)_DEPS_x86_64-w64-mingw32 := $($(PKG)_DEPS) mingw-w64
+$(PKG)_DEPS_i686-pc-mingw32.static.wsl := $($(PKG)_DEPS) mingw-org-wsl
 
 define $(PKG)_UPDATE
     $(WGET) -q -O- 'http://ftp.gnu.org/gnu/gcc/?C=M;O=D' | \
@@ -54,6 +55,10 @@ define $(PKG)_CONFIGURE
         $(shell [ `uname -s` == Darwin ] && echo "LDFLAGS='-Wl,-no_pie'")
 endef
 
+define $(PKG)_POST_BUILD
+    rm -f $(addprefix $(PREFIX)/$(TARGET)/bin/, c++ g++ gcc gfortran)
+endef
+
 define $(PKG)_BUILD_i686-pc-mingw32
     # build full cross gcc
     $($(PKG)_CONFIGURE) \
@@ -61,7 +66,66 @@ define $(PKG)_BUILD_i686-pc-mingw32
     $(MAKE) -C '$(1).build' -j '$(JOBS)'
     $(MAKE) -C '$(1).build' -j 1 install
 
-    rm -f $(addprefix $(PREFIX)/$(TARGET)/bin/, c++ g++ gcc gfortran)
+    $($(PKG)_POST_BUILD)
+endef
+
+define $(PKG)_BUILD_i686-pc-mingw32.static.wsl
+    # prepare source
+    cd '$(1)' && $(call UNPACK_PKG_ARCHIVE,mingw-org-wsl)
+    $(foreach PKG_PATCH,$(sort $(wildcard $(TOP_DIR)/src/mingw-org-wsl-*.patch)),
+	        (cd '$(1)/$(mingw-org-wsl_SUBDIR)' && $(PATCH) -p1 -u) < $(PKG_PATCH))
+    cd '$(1)/$(mingw-org-wsl_SUBDIR)' && git clone `grep url .gitmodules | cut -d '=' -f2`
+    cd '$(1)/$(mingw-org-wsl_SUBDIR)' && autoreconf -fi
+
+    # install headers
+    # can't use any Makefile install targets as our patches add headers
+    cp -rpv '$(1)/$(mingw-org-wsl_SUBDIR)/include'         '$(PREFIX)/$(TARGET)'
+    cp -rpv '$(1)/$(mingw-org-wsl_SUBDIR)/misc/include/GL' '$(PREFIX)/$(TARGET)/include'
+
+    # build standalone gcc
+    $($(PKG)_CONFIGURE)
+    $(MAKE) -C '$(1).build' -j '$(JOBS)' all-gcc
+    $(MAKE) -C '$(1).build' -j 1 install-gcc
+
+    # build crt
+    mkdir '$(1).crt-build'
+    cd '$(1).crt-build' && '$(1)/$(mingw-org-wsl_SUBDIR)/configure' \
+        --target='$(TARGET)' \
+        --host='$(BUILD)' \
+        --prefix='$(PREFIX)/$(TARGET)' \
+        CFLAGS=-D_X86_
+    $(MAKE) -C '$(1).crt-build' \
+        CC='$(TARGET)-gcc' \
+        AR='$(TARGET)-ar' \
+        AS='$(TARGET)-as' \
+        DLLTOOL='$(TARGET)-dlltool' \
+        RANLIB='$(TARGET)-ranlib' \
+        mingwthrd.def libmingwex.a
+    touch '$(1).crt-build/mingwm10.dll'
+    $(MAKE) -C '$(1).crt-build' \
+        CC='$(TARGET)-gcc' \
+        AR='$(TARGET)-ar' \
+        AS='$(TARGET)-as' \
+        DLLTOOL='$(TARGET)-dlltool' \
+        RANLIB='$(TARGET)-ranlib' \
+        -j '$(JOBS)' install-dirs install-libs install-objs
+
+    # build rest of gcc
+    cd '$(1).build'
+    $(MAKE) -C '$(1).build' -j '$(JOBS)'
+    $(MAKE) -C '$(1).build' -j 1 install
+
+    # build and install mingwm10.dll
+    rm '$(1).crt-build/mingwm10.dll'
+    $(MAKE) -C '$(1).crt-build' \
+        CC='$(TARGET)-gcc' \
+        AR='$(TARGET)-ar' \
+        AS='$(TARGET)-as' \
+        DLLTOOL='$(TARGET)-dlltool' \
+        RANLIB='$(TARGET)-ranlib' \
+        install-bins
+
+    $($(PKG)_POST_BUILD)
 endef
 
 define $(PKG)_BUILD_mingw-w64
@@ -85,7 +149,7 @@ define $(PKG)_BUILD_mingw-w64
     $(MAKE) -C '$(1).build' -j '$(JOBS)'
     $(MAKE) -C '$(1).build' -j 1 install
 
-    rm -f $(addprefix $(PREFIX)/$(TARGET)/bin/, c++ g++ gcc gfortran)
+    $($(PKG)_POST_BUILD)
 endef
 
 $(PKG)_BUILD_x86_64-w64-mingw32 = $(subst mxe-config-opts,--disable-lib32,$($(PKG)_BUILD_mingw-w64))
