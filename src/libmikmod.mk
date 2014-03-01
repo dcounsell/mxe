@@ -23,7 +23,8 @@ define $(PKG)_BUILD
         --disable-shared \
         --prefix='$(PREFIX)/$(TARGET)' \
         CONFIG_SHELL='$(SHELL)' \
-        CFLAGS='-msse2'
+        CFLAGS='-msse2' \
+        ac_cv_func_strcasecmp=yes
     $(MAKE) -C '$(1)' -j '$(JOBS)' install bin_PROGRAMS= sbin_PROGRAMS= noinst_PROGRAMS=
 
     '$(TARGET)-gcc' \
@@ -32,6 +33,5 @@ define $(PKG)_BUILD
         `'$(PREFIX)/$(TARGET)/bin/libmikmod-config' --cflags --libs`
 endef
 
-$(PKG)_BUILD_i686-pc-mingw32 =
 $(PKG)_BUILD_x86_64-w64-mingw32 =
 $(PKG)_BUILD_i686-w64-mingw32 =
