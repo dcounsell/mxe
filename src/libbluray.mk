@@ -26,8 +26,6 @@ define $(PKG)_BUILD
         --with-freetype \
         --with-libxml2 \
         --disable-bdjava
-    $(MAKE) -C '$(1)' -j '$(JOBS)'
+    $(MAKE) -C '$(1)' -j '$(JOBS)' CFLAGS='-U_ISOC99_SOURCE'
     $(MAKE) -C '$(1)' -j 1 install
 endef
-
-$(PKG)_BUILD_i686-pc-mingw32 =
