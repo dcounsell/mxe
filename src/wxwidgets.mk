@@ -90,7 +90,8 @@ endef
 define $(PKG)_TEST
     # build test program
     '$(TARGET)-g++' \
-        -W -Wall -Werror -Wno-error=unused-local-typedefs -pedantic -std=gnu++0x \
+        -W -Wall -Werror -Wno-error=unused-local-typedefs \
+        -Wno-error=cpp -pedantic -std=gnu++0x \
         '$(2).cpp' -o '$(PREFIX)/$(TARGET)/bin/test-wxwidgets.exe' \
         `'$(TARGET)-wx-config' --cflags --libs`
 endef
@@ -99,5 +100,3 @@ define $(PKG)_BUILD
     $($(PKG)_BUILD_UNICODE)
     $($(PKG)_TEST)
 endef
-
-$(PKG)_BUILD_i686-pc-mingw32 =
