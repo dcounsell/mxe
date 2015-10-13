@@ -533,6 +533,14 @@ show-upstream-deps-%:
 	    @echo -n,\
 	    $(error Package $* not found in index.html))
 
+.PHONY: print-build-order
+print-build-order:
+	@$(MAKE) -f '$(MAKEFILE)' MXE_TARGETS='$(MXE_TARGETS)' \
+	    --debug=b --just-print --always-make --no-builtin-variables | \
+	grep 'Must remake target' | \
+	grep -v download-only | \
+	$(SED) -n "s,.*/usr/\(.*\)/installed/\(.*\)'\.,\1 \2,p"
+
 .PHONY: clean
 clean:
 	rm -rf $(call TMP_DIR,*) $(PREFIX) build-matrix.html
