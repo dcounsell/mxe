@@ -533,6 +533,16 @@ show-upstream-deps-%:
 	    @echo -n,\
 	    $(error Package $* not found in index.html))
 
+# print first level pkg deps for use in build-pkg.lua
+print-deps-for-build-pkg:
+	@$(foreach TARGET,$(MXE_TARGETS), \
+	    $(foreach PKG,$(sort $($(TARGET)_PKGS)),echo \
+	        for-build-pkg $(PKG) \
+	        $(subst $(space),-,$($(PKG)_VERSION)) \
+	        $(value $(call LOOKUP_PKG_RULE,$(PKG),DEPS,$(TARGET))) \
+	        $(if $(call set_is_not_member,$(PKG),$(MXE_CONF_PKGS)),$(MXE_CONF_PKGS));))
+
+
 .PHONY: print-build-order
 print-build-order:
 	@$(MAKE) -f '$(MAKEFILE)' MXE_TARGETS='$(MXE_TARGETS)' \
