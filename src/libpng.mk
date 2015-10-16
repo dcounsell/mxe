@@ -3,11 +3,11 @@
 
 PKG             := libpng
 $(PKG)_IGNORE   :=
-$(PKG)_VERSION  := 1.6.9
-$(PKG)_CHECKSUM := fe5b37a01a2a056a26f1a6661dc45e026ad86c88
+$(PKG)_VERSION  := 1.6.18
+$(PKG)_CHECKSUM := c6e06510d30beba08c96c468ab269fafb2bb256f
 $(PKG)_SUBDIR   := libpng-$($(PKG)_VERSION)
 $(PKG)_FILE     := libpng-$($(PKG)_VERSION).tar.xz
-$(PKG)_URL      := ftp://ftp.simplesystems.org/pub/$(PKG)/png/src/libpng16/$($(PKG)_FILE)
+$(PKG)_URL      := ftp://ftp.simplesystems.org/pub/png/src/libpng16/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc zlib
 
 define $(PKG)_UPDATE
