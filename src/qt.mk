@@ -3,8 +3,8 @@
 
 PKG             := qt
 $(PKG)_IGNORE   :=
-$(PKG)_VERSION  := 4.8.5
-$(PKG)_CHECKSUM := 745f9ebf091696c0d5403ce691dc28c039d77b9e
+$(PKG)_VERSION  := 4.8.7
+$(PKG)_CHECKSUM := 76aef40335c0701e5be7bb3a9101df5d22fe3666
 $(PKG)_SUBDIR   := $(PKG)-everywhere-opensource-src-$($(PKG)_VERSION)
 $(PKG)_FILE     := $(PKG)-everywhere-opensource-src-$($(PKG)_VERSION).tar.gz
 $(PKG)_URL      := http://download.qt-project.org/official_releases/qt/4.8/$($(PKG)_VERSION)/$($(PKG)_FILE)
@@ -60,7 +60,7 @@ define $(PKG)_BUILD
         -system-libpng \
         -system-libjpeg \
         -system-libtiff \
-        -system-libmng \
+        -no-libmng \
         -system-sqlite \
         -openssl-linked \
         -dbus-linked \
