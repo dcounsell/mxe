@@ -3,8 +3,8 @@
 
 PKG             := hdf4
 $(PKG)_IGNORE   :=
-$(PKG)_VERSION  := 4.2.9
-$(PKG)_CHECKSUM := c2251642e29c7acada37d5e599e68d270088e56d
+$(PKG)_VERSION  := 4.2.11
+$(PKG)_CHECKSUM := 3b98d9ef6ff1fbc569e53432bddc14c148da8274
 $(PKG)_SUBDIR   := hdf-$($(PKG)_VERSION)
 $(PKG)_FILE     := hdf-$($(PKG)_VERSION).tar.bz2
 $(PKG)_URL      := http://www.hdfgroup.org/ftp/HDF/HDF_Current/src/$($(PKG)_FILE)
