@@ -3,11 +3,11 @@
 
 PKG             := openscenegraph
 $(PKG)_IGNORE   :=
-$(PKG)_VERSION  := 3.2.0
-$(PKG)_CHECKSUM := c20891862b5876983d180fc4a3d3cfb2b4a3375c
+$(PKG)_VERSION  := 3.2.3
+$(PKG)_CHECKSUM := 72de6e671d7c29dcc055b3380e8029065565c40d
 $(PKG)_SUBDIR   := OpenSceneGraph-$($(PKG)_VERSION)
 $(PKG)_FILE     := OpenSceneGraph-$($(PKG)_VERSION).zip
-$(PKG)_URL      := http://www.openscenegraph.org/downloads/developer_releases/$($(PKG)_FILE)
+$(PKG)_URL      := http://trac.openscenegraph.org/downloads/developer_releases/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc boost curl dcmtk ffmpeg freetype gdal giflib gta jasper jpeg libpng openal openexr poppler qt tiff xine-lib zlib
 
 define $(PKG)_UPDATE
