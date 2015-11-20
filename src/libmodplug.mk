@@ -3,8 +3,8 @@
 
 PKG             := libmodplug
 $(PKG)_IGNORE   :=
-$(PKG)_VERSION  := 0.8.8.4
-$(PKG)_CHECKSUM := df4deffe542b501070ccb0aee37d875ebb0c9e22
+$(PKG)_VERSION  := 0.8.8.5
+$(PKG)_CHECKSUM := 771ee75bb8bfcfe95eae434ed1f3b2c5b63b2cb3
 $(PKG)_SUBDIR   := $(PKG)-$($(PKG)_VERSION)
 $(PKG)_FILE     := $(PKG)-$($(PKG)_VERSION).tar.gz
 $(PKG)_URL      := http://$(SOURCEFORGE_MIRROR)/project/modplug-xmms/$(PKG)/$($(PKG)_VERSION)/$($(PKG)_FILE)
