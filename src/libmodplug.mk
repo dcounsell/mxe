@@ -23,9 +23,4 @@ define $(PKG)_BUILD
         --enable-static \
         --prefix='$(PREFIX)/$(TARGET)'
     $(MAKE) -C '$(1)' -j '$(JOBS)' install
-
-    '$(TARGET)-gcc' \
-        -W -Wall -ansi -pedantic \
-        '$(2).c' -o '$(PREFIX)/$(TARGET)/bin/test-libmodplug.exe' \
-        `'$(TARGET)-pkg-config' libmodplug --cflags --libs`
 endef
